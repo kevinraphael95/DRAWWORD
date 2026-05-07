@@ -1,234 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Typographie Vivante — Dessin par les mots</title>
-
-textsvg.html
-22 Ko
-﻿
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Typographie Vivante — Dessin par les mots</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Outfit:wght@200;400;600&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0d0d0f;
-    --surface: #13131a;
-    --border: rgba(255,255,255,0.07);
-    --text: #e8e4dc;
-    --muted: #6b6770;
-    --accent: #c8a96e;
-    --accent2: #7b9ea8;
-    --glow: rgba(200,169,110,0.15);
-  }
-
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Outfit', sans-serif;
-    overflow-x: hidden;
-  }
-
-  /* Grain overlay */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none; z-index: 9999; opacity: 0.4;
-  }
-
-  /* NAV */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1.2rem 3rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(13,13,15,0.85);
-    backdrop-filter: blur(12px);
-  }
-  .nav-logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem; font-weight: 300; letter-spacing: 0.25em;
-    color: var(--accent); text-transform: uppercase;
-  }
-  .nav-links {
-    display: flex; gap: 2.5rem; list-style: none;
-    font-size: 0.72rem; font-weight: 200; letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--muted);
-  }
-  .nav-links a { color: inherit; text-decoration: none; transition: color 0.3s; }
-  .nav-links a:hover { color: var(--text); }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 6rem 2rem 3rem;
-    position: relative;
-  }
-
-  .hero-label {
-    font-size: 0.65rem; letter-spacing: 0.35em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 1.2rem; font-weight: 400;
-    opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
-  }
-  .hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2.5rem, 6vw, 5rem);
-    font-weight: 300; line-height: 1.1; text-align: center;
-    margin-bottom: 0.5rem;
-    opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
-  }
-  .hero-title em { font-style: italic; color: var(--accent); }
-  .hero-subtitle {
-    font-size: 0.8rem; color: var(--muted); letter-spacing: 0.08em;
-    margin-bottom: 3.5rem; text-align: center;
-    opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
-  }
-
-  /* CONTROLS */
-  .controls {
-    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
-    margin-bottom: 3rem;
-    opacity: 0; animation: fadeUp 0.8s 0.8s forwards;
-  }
-  .btn {
-    padding: 0.65rem 1.6rem;
-    border: 1px solid var(--border);
-    background: var(--surface); color: var(--text);
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
-    cursor: pointer; transition: all 0.25s; border-radius: 2px;
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.primary { border-color: var(--accent); color: var(--accent); background: var(--glow); }
-  .btn.primary:hover { background: rgba(200,169,110,0.25); }
-  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  /* SHAPE SELECTOR */
-  .shape-row {
-    display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;
-    margin-bottom: 0.5rem;
-    opacity: 0; animation: fadeUp 0.8s 0.9s forwards;
-  }
-  .shape-btn {
-    width: 56px; height: 56px; border: 1px solid var(--border);
-    background: var(--surface); cursor: pointer; border-radius: 4px;
-    transition: all 0.2s; display: flex; align-items: center; justify-content: center;
-    color: var(--muted); font-size: 1.4rem;
-  }
-  .shape-btn:hover, .shape-btn.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 16px var(--glow); }
-
-  /* CANVAS ZONE */
-  .canvas-wrap {
-    position: relative; width: 100%; max-width: 820px;
-    opacity: 0; animation: fadeUp 0.8s 1s forwards;
-  }
-  .canvas-frame {
-    border: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 4px;
-    position: relative;
-    overflow: hidden;
-    min-height: 520px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .canvas-frame::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 50% 30%, rgba(200,169,110,0.05) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  #svg-output {
-    width: 100%; height: 100%; min-height: 520px;
-    position: relative; z-index: 1;
-  }
-
-  /* STATUS BAR */
-  .status-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0.7rem 1.2rem; border-top: 1px solid var(--border);
-    font-size: 0.65rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;
-  }
-  .status-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: var(--muted);
-    display: inline-block; margin-right: 0.5rem;
-    transition: background 0.3s;
-  }
-  .status-dot.active { background: #6fcf97; box-shadow: 0 0 6px #6fcf97; }
-
-  /* SOURCE BADGE */
-  .source-badge {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    font-size: 0.6rem; letter-spacing: 0.12em; color: var(--muted);
-    border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 2px;
-  }
-  .source-badge a { color: var(--accent); text-decoration: none; }
-
-  /* WIKI PANEL */
-  .wiki-panel {
-    margin-top: 1.5rem;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 4px;
-    padding: 1.2rem 1.5rem;
-    font-size: 0.72rem; line-height: 1.8; color: var(--muted);
-    max-height: 0; overflow: hidden;
-    transition: max-height 0.5s ease, padding 0.3s;
-  }
-  .wiki-panel.open { max-height: 200px; }
-  .wiki-panel-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 0.85rem; color: var(--text); margin-bottom: 0.5rem; font-weight: 400;
-  }
-
-  /* FOOTER */
-  footer {
-    text-align: center; padding: 3rem; border-top: 1px solid var(--border);
-    font-size: 0.65rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Loading shimmer */
-  .shimmer {
-    animation: shimmer 1.5s infinite linear;
-    background: linear-gradient(90deg, transparent, rgba(200,169,110,0.08), transparent);
-    background-size: 200% 100%;
-    position: absolute; inset: 0; pointer-events: none; z-index: 2;
-    display: none;
-  }
-  .shimmer.show { display: block; }
-  @keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
-
-  /* SVG text styling */
-  .word-path text {
-    font-size: 5.5px;
-    font-family: 'Outfit', monospace;
-    fill: var(--text);
-    letter-spacing: 0.04em;
-  }
-
-  /* Color modes */
-  .mode-mono .word-path text { fill: #e8e4dc; }
-  .mode-gold .word-path text { fill: var(--accent); }
-  .mode-spectrum .word-path:nth-child(3n) text { fill: #c8a96e; }
-  .mode-spectrum .word-path:nth-child(3n+1) text { fill: #7b9ea8; }
-  .mode-spectrum .word-path:nth-child(3n+2) text { fill: #b8a0c8; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typographie Vivante</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Outfit:wght@200;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -246,6 +25,31 @@ textsvg.html
   <h1 class="hero-title">Des <em>mots</em> qui dessinent</h1>
   <p class="hero-subtitle">Chaque trait est une phrase Wikipedia. Chaque forme, un article différent.</p>
 
+  <!-- WIKI SEARCH -->
+  <div class="wiki-search-wrap">
+    <div class="wiki-search-box">
+      <input type="text" id="wiki-input" placeholder="Rechercher un article Wikipedia… (ex: fromage, chat, jazz)" autocomplete="off">
+      <button class="btn btn-search" id="btn-search-wiki">⌕</button>
+    </div>
+    <div class="wiki-suggestions" id="wiki-suggestions"></div>
+    <div class="wiki-selected" id="wiki-selected">
+      <span class="dot-random"></span>
+      <span id="wiki-selected-label">Article aléatoire</span>
+      <button class="btn-clear" id="btn-clear-wiki" style="display:none">✕</button>
+    </div>
+  </div>
+
+  <!-- WORD DRAW MODE -->
+  <div class="wordmode-wrap">
+    <label class="wordmode-label">
+      <input type="checkbox" id="chk-wordmode">
+      <span class="toggle-pill"></span>
+      <span>Dessiner un mot avec l'article</span>
+    </label>
+    <input type="text" id="word-input" class="word-input" placeholder="Ex: FROMAGE" maxlength="20" style="display:none">
+  </div>
+
+  <!-- SHAPES -->
   <div class="shape-row">
     <button class="shape-btn active" data-shape="bird" title="Oiseau">🕊</button>
     <button class="shape-btn" data-shape="circle" title="Cercle">○</button>
@@ -253,25 +57,23 @@ textsvg.html
     <button class="shape-btn" data-shape="heart" title="Cœur">♡</button>
     <button class="shape-btn" data-shape="wave" title="Vague">〜</button>
     <button class="shape-btn" data-shape="fish" title="Poisson">🐟</button>
+    <button class="shape-btn" data-shape="spiral" title="Spirale">@</button>
+    <button class="shape-btn" data-shape="tree" title="Arbre">🌲</button>
+    <button class="shape-btn" data-shape="random" title="Aléatoire">⚄</button>
   </div>
 
+  <!-- CONTROLS -->
   <div class="controls">
     <button class="btn primary" id="btn-generate">✦ Générer</button>
-    <button class="btn" id="btn-color" title="Mode couleur">Couleur : Mono</button>
-    <button class="btn" id="btn-wiki">Source Wikipedia</button>
+    <button class="btn" id="btn-color">Couleur : Mono</button>
     <button class="btn" id="btn-export">Exporter SVG</button>
   </div>
 
+  <!-- CANVAS -->
   <div class="canvas-wrap">
     <div class="canvas-frame">
       <div class="shimmer" id="shimmer"></div>
       <svg id="svg-output" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="glow-filter">
-            <feGaussianBlur stdDeviation="1.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
         <text x="250" y="260" text-anchor="middle" fill="#3a3a4a"
           font-family="Outfit,sans-serif" font-size="11" letter-spacing="0.2em">
           CLIQUEZ SUR GÉNÉRER
@@ -281,14 +83,14 @@ textsvg.html
     <div class="status-bar">
       <span><span class="status-dot" id="status-dot"></span><span id="status-text">Prêt</span></span>
       <span class="source-badge">
-        <span>Source :</span>
-        <a href="#" id="wiki-link" target="_blank">Wikipedia</a>
+        Source : <a href="#" id="wiki-link" target="_blank">Wikipedia</a>
       </span>
     </div>
   </div>
 
+  <!-- WIKI PANEL -->
   <div class="wiki-panel" id="wiki-panel">
-    <div class="wiki-panel-title" id="wiki-title">—</div>
+    <div class="wiki-panel-title" id="wiki-panel-title">—</div>
     <div id="wiki-excerpt"></div>
   </div>
 </main>
@@ -297,261 +99,237 @@ textsvg.html
   Typographie Vivante &mdash; Art génératif par les mots &mdash; Données Wikipedia (CC BY-SA)
 </footer>
 
-<script>
-// ─── SHAPES ──────────────────────────────────────────────────────────────────
-// Each shape is a list of SVG path strings, viewed in a 500x500 viewport
-const SHAPES = {
-  bird: [
-    // Body
-    "M 250 280 C 210 260 180 240 160 210 C 145 185 150 160 165 145 C 180 130 200 130 220 140 C 235 148 245 162 250 175",
-    "M 250 175 C 255 162 265 148 280 140 C 300 130 320 130 335 145 C 350 160 355 185 340 210 C 320 240 290 260 250 280",
-    // Wings open
-    "M 190 200 C 170 195 150 185 130 170 C 110 155 95 140 85 125 C 100 130 120 138 140 148 C 160 158 180 172 200 185",
-    "M 310 200 C 330 195 350 185 370 170 C 390 155 405 140 415 125 C 400 130 380 138 360 148 C 340 158 320 172 300 185",
-    // Tail
-    "M 240 280 C 235 300 225 320 210 340 C 200 355 190 368 182 378",
-    "M 260 280 C 265 300 275 320 290 340 C 300 355 310 368 318 378",
-    "M 250 282 C 250 305 250 328 250 358",
-    // Head
-    "M 250 175 C 245 165 240 155 242 145 C 244 135 250 130 258 130 C 266 130 272 136 273 144 C 274 152 269 163 265 172",
-    // Beak
-    "M 258 132 C 268 128 278 124 285 120 C 278 126 272 132 265 136",
-  ],
-  circle: (() => {
-    const paths = [];
-    const cx = 250, cy = 250;
-    for (let r = 20; r <= 200; r += 22) {
-      paths.push(`M ${cx+r} ${cy} A ${r} ${r} 0 1 1 ${cx+r-0.01} ${cy}`);
-    }
-    return paths;
-  })(),
-  star: (() => {
-    const paths = [];
-    const cx = 250, cy = 250;
-    // 5-pointed star outline
-    const pts = [];
-    for (let i = 0; i < 10; i++) {
-      const angle = (i * Math.PI / 5) - Math.PI / 2;
-      const r = i % 2 === 0 ? 200 : 80;
-      pts.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
-    }
-    let d = `M ${pts[0][0]} ${pts[0][1]}`;
-    for (let i = 1; i < pts.length; i++) d += ` L ${pts[i][0]} ${pts[i][1]}`;
-    d += ' Z';
-    paths.push(d);
-    // Inner star
-    const pts2 = [];
-    for (let i = 0; i < 10; i++) {
-      const angle = (i * Math.PI / 5) - Math.PI / 2;
-      const r = i % 2 === 0 ? 120 : 50;
-      pts2.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
-    }
-    let d2 = `M ${pts2[0][0]} ${pts2[0][1]}`;
-    for (let i = 1; i < pts2.length; i++) d2 += ` L ${pts2[i][0]} ${pts2[i][1]}`;
-    d2 += ' Z';
-    paths.push(d2);
-    // Lines from center to points
-    for (let i = 0; i < 5; i++) {
-      const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-      paths.push(`M ${cx} ${cy} L ${cx + 200*Math.cos(angle)} ${cy + 200*Math.sin(angle)}`);
-    }
-    return paths;
-  })(),
-  heart: (() => {
-    const paths = [];
-    // Main heart
-    paths.push("M 250 360 C 200 320 100 280 100 200 C 100 150 140 115 185 115 C 210 115 232 128 250 148 C 268 128 290 115 315 115 C 360 115 400 150 400 200 C 400 280 300 320 250 360 Z");
-    // Inner heart
-    paths.push("M 250 320 C 215 290 145 260 145 205 C 145 168 170 145 200 145 C 222 145 239 158 250 172 C 261 158 278 145 300 145 C 330 145 355 168 355 205 C 355 260 285 290 250 320 Z");
-    // Decorative lines
-    paths.push("M 250 148 C 250 200 250 260 250 320");
-    return paths;
-  })(),
-  wave: (() => {
-    const paths = [];
-    for (let i = 0; i < 8; i++) {
-      const y = 100 + i * 45;
-      const amp = 40 - i * 2;
-      paths.push(`M 50 ${y} C 120 ${y-amp} 180 ${y+amp} 250 ${y} C 320 ${y-amp} 380 ${y+amp} 450 ${y}`);
-    }
-    return paths;
-  })(),
-  fish: [
-    // Body outline
-    "M 150 250 C 160 220 195 195 250 190 C 305 185 355 205 380 250 C 355 295 305 315 250 310 C 195 305 160 280 150 250 Z",
-    // Tail
-    "M 380 250 C 400 225 430 210 450 195 C 430 235 430 265 450 305 C 430 290 400 275 380 250",
-    // Top fin
-    "M 230 192 C 235 165 250 148 265 140 C 270 158 272 175 270 192",
-    // Eye
-    "M 200 240 C 200 233 207 228 215 228 C 223 228 230 233 230 240 C 230 247 223 252 215 252 C 207 252 200 247 200 240",
-    // Scales
-    "M 220 210 C 235 205 255 205 270 210",
-    "M 215 230 C 235 223 265 223 285 230",
-    "M 220 250 C 240 243 268 243 288 250",
-    // Mouth
-    "M 155 245 C 152 250 152 256 155 260",
-  ]
-};
+<script type="module">
+  import { SHAPES, generateRandomShape } from './shapes.js';
+  import { fetchWikiByTitle, fetchWikiRandom, searchWiki } from './wiki.js';
+  import { render, exportSVG } from './render.js';
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let currentShape = 'bird';
-let colorMode = 0;
-const colorModes = ['mono', 'gold', 'spectrum'];
-const colorLabels = ['Mono', 'Or', 'Spectre'];
-let wikiData = null;
-let isLoading = false;
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  let currentShape = 'bird';
+  let colorMode = 0;
+  const colorModes = ['mono', 'gold', 'spectrum'];
+  const colorLabels = ['Mono', 'Or', 'Spectre'];
+  let selectedWikiTitle = null; // null = random
+  let isLoading = false;
 
-// ─── WIKIPEDIA ────────────────────────────────────────────────────────────────
-async function fetchWikiText() {
-  // Use cors-friendly Wikipedia API
-  const url = `https://fr.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`;
-  const r1 = await fetch(url);
-  const d1 = await r1.json();
-  const pageId = d1.query.random[0].id;
-  const title = d1.query.random[0].title;
+  // ── WIKI SEARCH ────────────────────────────────────────────────────────────
+  const wikiInput = document.getElementById('wiki-input');
+  const wikiSuggestions = document.getElementById('wiki-suggestions');
+  const wikiSelectedLabel = document.getElementById('wiki-selected-label');
+  const btnClearWiki = document.getElementById('btn-clear-wiki');
 
-  const url2 = `https://fr.wikipedia.org/w/api.php?action=query&pageids=${pageId}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`;
-  const r2 = await fetch(url2);
-  const d2 = await r2.json();
-  const extract = d2.query.pages[pageId].extract || '';
-  const text = extract.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+  let searchTimer = null;
 
-  return { title, text, pageId };
-}
+  wikiInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = wikiInput.value.trim();
+    if (q.length < 2) { wikiSuggestions.innerHTML = ''; wikiSuggestions.style.display = 'none'; return; }
+    searchTimer = setTimeout(async () => {
+      const results = await searchWiki(q);
+      renderSuggestions(results);
+    }, 300);
+  });
 
-// ─── TEXT ALONG PATH ─────────────────────────────────────────────────────────
-function buildTextSVG(pathD, words, pathId) {
-  const textContent = words.join(' ') + '  ';
-  return `
-    <g class="word-path">
-      <defs>
-        <path id="${pathId}" d="${pathD}"/>
-      </defs>
-      <text>
-        <textPath href="#${pathId}" startOffset="0%">
-          ${escapeHTML(textContent.repeat(12))}
-        </textPath>
-      </text>
-    </g>`;
-}
+  document.getElementById('btn-search-wiki').addEventListener('click', async () => {
+    const q = wikiInput.value.trim();
+    if (!q) return;
+    const results = await searchWiki(q);
+    renderSuggestions(results);
+  });
 
-function escapeHTML(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function chunkWords(text, n) {
-  const words = text.split(/\s+/).filter(w => w.length > 1);
-  const size = Math.ceil(words.length / n);
-  const chunks = [];
-  for (let i = 0; i < n; i++) chunks.push(words.slice(i*size, (i+1)*size));
-  return chunks;
-}
-
-// ─── RENDER ───────────────────────────────────────────────────────────────────
-async function generate() {
-  if (isLoading) return;
-  isLoading = true;
-
-  const svg = document.getElementById('svg-output');
-  const shimmer = document.getElementById('shimmer');
-  const statusDot = document.getElementById('status-dot');
-  const statusText = document.getElementById('status-text');
-
-  shimmer.classList.add('show');
-  statusDot.classList.add('active');
-  statusText.textContent = 'Chargement Wikipedia…';
-  document.getElementById('btn-generate').disabled = true;
-
-  try {
-    wikiData = await fetchWikiText();
-
-    statusText.textContent = 'Composition…';
-
-    const paths = SHAPES[currentShape];
-    const wordChunks = chunkWords(wikiData.text, paths.length);
-
-    let svgContent = `<defs>
-      <filter id="glow-filter">
-        <feGaussianBlur stdDeviation="1.2" result="blur"/>
-        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>`;
-
-    // Background subtle grid
-    svgContent += `<g opacity="0.04">`;
-    for (let x = 0; x < 500; x += 50) svgContent += `<line x1="${x}" y1="0" x2="${x}" y2="500" stroke="#fff" stroke-width="0.3"/>`;
-    for (let y = 0; y < 500; y += 50) svgContent += `<line x1="0" y1="${y}" x2="500" y2="${y}" stroke="#fff" stroke-width="0.3"/>`;
-    svgContent += `</g>`;
-
-    paths.forEach((d, i) => {
-      const words = wordChunks[i] || wordChunks[0] || [];
-      svgContent += buildTextSVG(d, words, `path-${i}-${Date.now()}`);
+  function renderSuggestions(results) {
+    if (!results.length) { wikiSuggestions.innerHTML = '<div class="sug-none">Aucun résultat</div>'; wikiSuggestions.style.display = 'block'; return; }
+    wikiSuggestions.innerHTML = results.map(r =>
+      `<div class="sug-item" data-title="${escapeAttr(r)}">${r}</div>`
+    ).join('');
+    wikiSuggestions.style.display = 'block';
+    wikiSuggestions.querySelectorAll('.sug-item').forEach(el => {
+      el.addEventListener('click', () => selectWiki(el.dataset.title));
     });
-
-    svg.innerHTML = svgContent;
-    svg.className = `mode-${colorModes[colorMode]}`;
-
-    // Update wiki panel
-    document.getElementById('wiki-title').textContent = wikiData.title;
-    document.getElementById('wiki-excerpt').textContent = wikiData.text.slice(0, 300) + '…';
-    document.getElementById('wiki-link').href = `https://fr.wikipedia.org/?curid=${wikiData.pageId}`;
-    document.getElementById('wiki-link').textContent = wikiData.title;
-
-    const panel = document.getElementById('wiki-panel');
-    panel.classList.add('open');
-
-    statusText.textContent = `"${wikiData.title}" · ${wikiData.text.split(' ').length} mots`;
-  } catch (e) {
-    statusText.textContent = 'Erreur — réessayez';
-    console.error(e);
   }
 
-  shimmer.classList.remove('show');
-  statusDot.classList.remove('active');
-  document.getElementById('btn-generate').disabled = false;
-  isLoading = false;
-}
+  function selectWiki(title) {
+    selectedWikiTitle = title;
+    wikiSelectedLabel.textContent = title;
+    btnClearWiki.style.display = 'inline-block';
+    wikiSuggestions.style.display = 'none';
+    wikiInput.value = '';
+    // if word mode active and word input is empty, auto-fill
+    const wordInput = document.getElementById('word-input');
+    if (document.getElementById('chk-wordmode').checked && !wordInput.value.trim()) {
+      wordInput.value = title.toUpperCase().slice(0, 16);
+    }
+  }
 
-// ─── EXPORT ───────────────────────────────────────────────────────────────────
-function exportSVG() {
-  const svg = document.getElementById('svg-output');
-  const clone = svg.cloneNode(true);
-  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-  // Inline dark background
-  clone.insertAdjacentHTML('afterbegin', `<rect width="500" height="500" fill="#0d0d0f"/>`);
-  const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `typovivante-${currentShape}-${Date.now()}.svg`;
-  a.click();
-}
-
-// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
-document.getElementById('btn-generate').addEventListener('click', generate);
-
-document.getElementById('btn-export').addEventListener('click', exportSVG);
-
-document.getElementById('btn-color').addEventListener('click', () => {
-  colorMode = (colorMode + 1) % colorModes.length;
-  document.getElementById('btn-color').textContent = `Couleur : ${colorLabels[colorMode]}`;
-  const svg = document.getElementById('svg-output');
-  svg.className = `mode-${colorModes[colorMode]}`;
-});
-
-document.getElementById('btn-wiki').addEventListener('click', () => {
-  document.getElementById('wiki-panel').classList.toggle('open');
-});
-
-document.querySelectorAll('.shape-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentShape = btn.dataset.shape;
+  btnClearWiki.addEventListener('click', () => {
+    selectedWikiTitle = null;
+    wikiSelectedLabel.textContent = 'Article aléatoire';
+    btnClearWiki.style.display = 'none';
   });
-});
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.wiki-search-wrap')) {
+      wikiSuggestions.style.display = 'none';
+    }
+  });
+
+  // ── WORD MODE ──────────────────────────────────────────────────────────────
+  document.getElementById('chk-wordmode').addEventListener('change', e => {
+    document.getElementById('word-input').style.display = e.target.checked ? 'block' : 'none';
+  });
+
+  // ── SHAPE BUTTONS ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.shape-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentShape = btn.dataset.shape;
+    });
+  });
+
+  // ── GENERATE ───────────────────────────────────────────────────────────────
+  document.getElementById('btn-generate').addEventListener('click', async () => {
+    if (isLoading) return;
+    isLoading = true;
+
+    const shimmer = document.getElementById('shimmer');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const btnGen = document.getElementById('btn-generate');
+
+    shimmer.classList.add('show');
+    statusDot.classList.add('active');
+    statusText.textContent = 'Chargement Wikipedia…';
+    btnGen.disabled = true;
+
+    try {
+      // Fetch wiki
+      const wikiData = selectedWikiTitle
+        ? await fetchWikiByTitle(selectedWikiTitle)
+        : await fetchWikiRandom();
+
+      statusText.textContent = 'Composition…';
+
+      // Get shape paths
+      const wordMode = document.getElementById('chk-wordmode').checked;
+      const wordText = document.getElementById('word-input').value.trim().toUpperCase() || wikiData.title.toUpperCase().slice(0, 12);
+
+      let paths;
+      if (wordMode) {
+        paths = buildWordPaths(wordText);
+      } else if (currentShape === 'random') {
+        paths = generateRandomShape();
+      } else {
+        paths = SHAPES[currentShape];
+      }
+
+      render(paths, wikiData, colorModes[colorMode], wordMode ? wordText : null);
+
+      // Update panel
+      document.getElementById('wiki-panel-title').textContent = wikiData.title;
+      document.getElementById('wiki-excerpt').textContent = wikiData.text.slice(0, 320) + '…';
+      document.getElementById('wiki-link').href = `https://fr.wikipedia.org/?curid=${wikiData.pageId}`;
+      document.getElementById('wiki-link').textContent = wikiData.title;
+      document.getElementById('wiki-panel').classList.add('open');
+
+      statusText.textContent = `"${wikiData.title}" · ${wikiData.text.split(' ').length} mots`;
+    } catch(e) {
+      statusText.textContent = 'Erreur — réessayez';
+      console.error(e);
+    }
+
+    shimmer.classList.remove('show');
+    statusDot.classList.remove('active');
+    btnGen.disabled = false;
+    isLoading = false;
+  });
+
+  // ── COLOR ──────────────────────────────────────────────────────────────────
+  document.getElementById('btn-color').addEventListener('click', () => {
+    colorMode = (colorMode + 1) % colorModes.length;
+    document.getElementById('btn-color').textContent = `Couleur : ${colorLabels[colorMode]}`;
+    document.getElementById('svg-output').className = `mode-${colorModes[colorMode]}`;
+  });
+
+  // ── EXPORT ─────────────────────────────────────────────────────────────────
+  document.getElementById('btn-export').addEventListener('click', () => exportSVG(currentShape));
+
+  // ── WORD PATHS (text-as-letters) ───────────────────────────────────────────
+  // Simple 5x7 grid pixel font mapped to SVG paths
+  function buildWordPaths(word) {
+    // We'll use textPath along letter outlines approximated as SVG paths
+    // Each letter is a simplified outline path in a ~60x80 bounding box
+    // positioned sequentially across the 500px canvas
+    const letterPaths = getLetterPaths(word);
+    return letterPaths;
+  }
+
+  function getLetterPaths(word) {
+    // Letter outlines as path strings (simplified, in 0-60 x 0-80 coord space)
+    const LETTER_MAP = {
+      'A': ['M 30 5 L 5 75 M 30 5 L 55 75 M 12 50 L 48 50'],
+      'B': ['M 10 5 L 10 75 M 10 5 C 45 5 50 20 50 25 C 50 35 40 40 10 40 M 10 40 C 48 40 52 55 52 60 C 52 70 45 75 10 75'],
+      'C': ['M 52 20 C 45 5 10 5 10 40 C 10 75 45 75 52 60'],
+      'D': ['M 10 5 L 10 75 M 10 5 C 55 5 58 20 58 40 C 58 60 55 75 10 75'],
+      'E': ['M 50 5 L 10 5 L 10 75 L 50 75 M 10 40 L 42 40'],
+      'F': ['M 50 5 L 10 5 L 10 75 M 10 40 L 42 40'],
+      'G': ['M 52 20 C 45 5 10 5 10 40 C 10 75 45 75 52 60 L 52 42 L 35 42'],
+      'H': ['M 10 5 L 10 75 M 50 5 L 50 75 M 10 40 L 50 40'],
+      'I': ['M 30 5 L 30 75 M 15 5 L 45 5 M 15 75 L 45 75'],
+      'J': ['M 45 5 L 45 60 C 45 75 30 78 15 68'],
+      'K': ['M 10 5 L 10 75 M 10 40 L 50 5 M 10 40 L 50 75'],
+      'L': ['M 10 5 L 10 75 L 52 75'],
+      'M': ['M 10 75 L 10 5 L 30 40 L 50 5 L 50 75'],
+      'N': ['M 10 75 L 10 5 L 50 75 L 50 5'],
+      'O': ['M 30 5 C 5 5 5 75 30 75 C 55 75 55 5 30 5'],
+      'P': ['M 10 5 L 10 75 M 10 5 C 50 5 52 18 52 25 C 52 38 45 42 10 42'],
+      'Q': ['M 30 5 C 5 5 5 75 30 75 C 55 75 55 5 30 5 M 38 60 L 55 78'],
+      'R': ['M 10 5 L 10 75 M 10 5 C 50 5 52 18 52 25 C 52 38 45 42 10 42 M 25 42 L 52 75'],
+      'S': ['M 52 15 C 45 5 10 5 10 25 C 10 42 52 38 52 58 C 52 75 18 78 10 65'],
+      'T': ['M 30 5 L 30 75 M 5 5 L 55 5'],
+      'U': ['M 10 5 L 10 60 C 10 78 50 78 50 60 L 50 5'],
+      'V': ['M 10 5 L 30 75 L 50 5'],
+      'W': ['M 5 5 L 15 75 L 30 40 L 45 75 L 55 5'],
+      'X': ['M 10 5 L 50 75 M 50 5 L 10 75'],
+      'Y': ['M 10 5 L 30 42 L 50 5 M 30 42 L 30 75'],
+      'Z': ['M 10 5 L 50 5 L 10 75 L 50 75'],
+      ' ': [],
+    };
+
+    const paths = [];
+    const maxChars = Math.min(word.length, 8);
+    const totalWidth = 500;
+    const charWidth = 60;
+    const charHeight = 80;
+    const scaleX = Math.min(60, (totalWidth - 20) / maxChars) / charWidth;
+    const scaleY = scaleX;
+    const totalDrawWidth = maxChars * charWidth * scaleX;
+    const startX = (500 - totalDrawWidth) / 2;
+    const startY = (500 - charHeight * scaleY) / 2;
+
+    for (let ci = 0; ci < maxChars; ci++) {
+      const ch = word[ci].toUpperCase();
+      const letterStrokes = LETTER_MAP[ch] || LETTER_MAP['A'];
+      const ox = startX + ci * charWidth * scaleX;
+      const oy = startY;
+
+      for (const stroke of letterStrokes) {
+        // Transform path coords: scale and translate
+        const transformed = transformPath(stroke, ox, oy, scaleX, scaleY);
+        paths.push(transformed);
+      }
+    }
+    return paths.filter(Boolean);
+  }
+
+  function transformPath(d, ox, oy, sx, sy) {
+    // Replace all coordinate pairs in path commands
+    return d.replace(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g, (_, x, y) => {
+      return `${(parseFloat(x) * sx + ox).toFixed(1)} ${(parseFloat(y) * sy + oy).toFixed(1)}`;
+    });
+  }
+
+  function escapeAttr(s) { return s.replace(/"/g, '&quot;'); }
 </script>
 </body>
 </html>
-textsvg.html
-22 Ko
