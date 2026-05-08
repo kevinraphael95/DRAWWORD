@@ -23,9 +23,12 @@ export async function fetchWikiByTitle(title) {
   const data = await res.json();
   const pages = data.query.pages;
   const page = pages[Object.keys(pages)[0]];
+  const raw = page.extract || '';
+  // Supprimer les annotations wiki : [ref nécessaire], [1], [note 2], etc.
+  const text = raw.replace(/\[[\w\s\u00C0-\u017Féé]+\]/g, '').replace(/\s+/g, ' ').trim();
   return {
     title: page.title,
-    text: page.extract || '',
+    text,
     pageId: page.pageid,
   };
 }
