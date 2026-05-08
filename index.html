@@ -37,19 +37,19 @@
     <span class="pill"></span>
     Dessiner un mot
   </label>
-  <input type="text" id="word-input" class="word-input" placeholder="Ex: FROMAGE" maxlength="20">
+  <input type="text" id="word-input" class="word-input" placeholder="Ex: FROMAGE" maxlength="10">
 
-  <!-- SHAPES -->
-  <div class="shape-row">
-    <button class="shape-btn active" data-shape="bird"    title="Oiseau">🕊</button>
-    <button class="shape-btn"        data-shape="circle"  title="Cercle">○</button>
-    <button class="shape-btn"        data-shape="star"    title="Étoile">☆</button>
-    <button class="shape-btn"        data-shape="heart"   title="Cœur">♡</button>
-    <button class="shape-btn"        data-shape="wave"    title="Vague">〜</button>
-    <button class="shape-btn"        data-shape="fish"    title="Poisson">🐟</button>
-    <button class="shape-btn"        data-shape="spiral"  title="Spirale">◎</button>
-    <button class="shape-btn"        data-shape="tree"    title="Arbre">🌲</button>
-    <button class="shape-btn"        data-shape="random"  title="Aléatoire">⚄</button>
+  <!-- SHAPES (cachées en mode mot) -->
+  <div class="shape-row" id="shape-row">
+    <button class="shape-btn active" data-shape="bird"   title="Oiseau">🕊</button>
+    <button class="shape-btn"        data-shape="circle" title="Cercle">○</button>
+    <button class="shape-btn"        data-shape="star"   title="Étoile">☆</button>
+    <button class="shape-btn"        data-shape="heart"  title="Cœur">♡</button>
+    <button class="shape-btn"        data-shape="wave"   title="Vague">〜</button>
+    <button class="shape-btn"        data-shape="fish"   title="Poisson">🐟</button>
+    <button class="shape-btn"        data-shape="spiral" title="Spirale">◎</button>
+    <button class="shape-btn"        data-shape="tree"   title="Arbre">🌲</button>
+    <button class="shape-btn"        data-shape="random" title="Aléatoire">⚄</button>
   </div>
 
   <!-- CONTROLS -->
@@ -87,7 +87,7 @@
 <script type="module">
   import { SHAPES, generateRandom } from './shapes.js';
   import { searchWiki, fetchWikiByTitle, fetchWikiRandom } from './wiki.js';
-  import { render, exportSVG } from './render.js';
+  import { render, exportSVG, buildWordPaths } from './render.js';
 
   // ── STATE ──
   let currentShape = 'bird';
@@ -109,8 +109,7 @@
     const q = wikiInput.value.trim();
     if (q.length < 2) { suggBox.style.display = 'none'; return; }
     searchTimer = setTimeout(async () => {
-      const res = await searchWiki(q);
-      renderSugg(res);
+      renderSugg(await searchWiki(q));
     }, 320);
   });
 
@@ -140,9 +139,10 @@
     btnClear.style.display = 'inline-block';
     suggBox.style.display = 'none';
     wikiInput.value = '';
+    // Auto-remplir le champ mot si word mode actif et champ vide
     const wi = document.getElementById('word-input');
     if (document.getElementById('chk-word').checked && !wi.value.trim())
-      wi.value = title.toUpperCase().slice(0, 14);
+      wi.value = title.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 10);
   }
 
   btnClear.addEventListener('click', () => {
@@ -156,8 +156,16 @@
   });
 
   // ── WORD MODE ──
-  document.getElementById('chk-word').addEventListener('change', e => {
-    document.getElementById('word-input').style.display = e.target.checked ? 'block' : 'none';
+  const chkWord   = document.getElementById('chk-word');
+  const wordInput = document.getElementById('word-input');
+  const shapeRow  = document.getElementById('shape-row');
+
+  chkWord.addEventListener('change', () => {
+    const on = chkWord.checked;
+    wordInput.style.display = on ? 'block' : 'none';
+    // Griser les formes (elles sont ignorées en mode mot)
+    shapeRow.style.opacity = on ? '0.35' : '1';
+    shapeRow.style.pointerEvents = on ? 'none' : '';
   });
 
   // ── SHAPES ──
@@ -173,10 +181,12 @@
   document.getElementById('btn-gen').addEventListener('click', async () => {
     if (loading) return;
     loading = true;
+
     const shimmer = document.getElementById('shimmer');
     const sdot    = document.getElementById('sdot');
     const stext   = document.getElementById('stext');
     const btnGen  = document.getElementById('btn-gen');
+
     shimmer.classList.add('on');
     sdot.classList.add('on');
     stext.textContent = 'Chargement Wikipedia…';
@@ -188,7 +198,28 @@
         : await fetchWikiRandom();
 
       stext.textContent = 'Composition…';
-      const paths = currentShape === 'random' ? generateRandom() : SHAPES[currentShape];
+
+      // Choix des paths : mot ou forme
+      const wordMode = chkWord.checked;
+      const wordText = wordInput.value.trim().toUpperCase().replace(/[^A-Z ]/g, '') || wikiData.title.toUpperCase().replace(/[^A-Z ]/g, '').slice(0, 10);
+
+      let paths;
+      if (wordMode) {
+        paths = buildWordPaths(wordText);
+        if (!paths.length) {
+          stext.textContent = 'Mot invalide — utilisez des lettres A-Z';
+          shimmer.classList.remove('on');
+          sdot.classList.remove('on');
+          btnGen.disabled = false;
+          loading = false;
+          return;
+        }
+      } else if (currentShape === 'random') {
+        paths = generateRandom();
+      } else {
+        paths = SHAPES[currentShape];
+      }
+
       render(paths, wikiData, colorModes[colorMode]);
 
       document.getElementById('wiki-panel-title').textContent = wikiData.title;
@@ -197,6 +228,7 @@
       document.getElementById('wiki-link').textContent = wikiData.title;
       document.getElementById('wiki-panel').classList.add('open');
       stext.textContent = `"${wikiData.title}" · ${wikiData.text.split(' ').length} mots`;
+
     } catch (e) {
       stext.textContent = 'Erreur — réessayez';
       console.error(e);

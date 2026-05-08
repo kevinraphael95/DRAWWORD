@@ -1,4 +1,4 @@
-// render.js — Rendu SVG et export
+// render.js — Rendu SVG, mode mot, et export
 
 const PALETTES = {
   mono:     ['#2a2620', '#4a4540', '#7a7570'],
@@ -6,9 +6,95 @@ const PALETTES = {
   spectrum: ['#bf4020', '#306080', '#5a7040', '#7050a0', '#c87030'],
 };
 
+// ── POLICE PIXEL 5×7 (paths dans un espace 0-50 × 0-70) ──────────────────────
+// Chaque lettre = tableau de segments [x1,y1,x2,y2,...] ou courbes SVG
+const FONT = {
+  A: ['M 25 4 L 4 66 M 25 4 L 46 66 M 10 42 L 40 42'],
+  B: ['M 8 4 L 8 66 M 8 4 C 38 4 42 16 42 22 C 42 30 34 34 8 34 M 8 34 C 40 34 44 46 44 52 C 44 62 36 66 8 66'],
+  C: ['M 44 16 C 36 4 8 4 8 35 C 8 66 36 66 44 54'],
+  D: ['M 8 4 L 8 66 M 8 4 C 48 4 50 18 50 35 C 50 52 48 66 8 66'],
+  E: ['M 42 4 L 8 4 L 8 66 L 42 66 M 8 35 L 36 35'],
+  F: ['M 42 4 L 8 4 L 8 66 M 8 35 L 36 35'],
+  G: ['M 44 16 C 36 4 8 4 8 35 C 8 66 36 66 44 54 L 44 36 L 28 36'],
+  H: ['M 8 4 L 8 66 M 42 4 L 42 66 M 8 35 L 42 35'],
+  I: ['M 25 4 L 25 66 M 12 4 L 38 4 M 12 66 L 38 66'],
+  J: ['M 38 4 L 38 54 C 38 66 26 70 12 60'],
+  K: ['M 8 4 L 8 66 M 8 35 L 44 4 M 8 35 L 44 66'],
+  L: ['M 8 4 L 8 66 L 44 66'],
+  M: ['M 8 66 L 8 4 L 25 38 L 42 4 L 42 66'],
+  N: ['M 8 66 L 8 4 L 42 66 L 42 4'],
+  O: ['M 25 4 C 4 4 4 66 25 66 C 46 66 46 4 25 4'],
+  P: ['M 8 4 L 8 66 M 8 4 C 42 4 44 16 44 22 C 44 34 36 38 8 38'],
+  Q: ['M 25 4 C 4 4 4 66 25 66 C 46 66 46 4 25 4 M 32 54 L 48 70'],
+  R: ['M 8 4 L 8 66 M 8 4 C 42 4 44 16 44 22 C 44 34 36 38 8 38 M 22 38 L 46 66'],
+  S: ['M 44 14 C 36 4 8 4 8 22 C 8 36 44 34 44 50 C 44 66 16 68 8 56'],
+  T: ['M 25 4 L 25 66 M 4 4 L 46 4'],
+  U: ['M 8 4 L 8 52 C 8 68 42 68 42 52 L 42 4'],
+  V: ['M 4 4 L 25 66 L 46 4'],
+  W: ['M 4 4 L 14 66 L 25 36 L 36 66 L 46 4'],
+  X: ['M 8 4 L 42 66 M 42 4 L 8 66'],
+  Y: ['M 4 4 L 25 38 L 46 4 M 25 38 L 25 66'],
+  Z: ['M 8 4 L 42 4 L 8 66 L 42 66'],
+  ' ': [],
+};
+
 /**
- * Remplit le SVG #svg-output avec des mots Wikipedia tracés le long des chemins.
- * Le texte tourne en boucle pour couvrir tous les chemins intégralement.
+ * Convertit un mot en tableau de paths SVG (lettres positionnées sur le canvas 500×500)
+ */
+export function buildWordPaths(word) {
+  const letters = word.toUpperCase().split('').filter(c => FONT[c] !== undefined);
+  if (!letters.length) return [];
+
+  const maxChars = Math.min(letters.length, 10);
+  const letterW = 50, letterH = 70;
+  const padding = 8; // espace entre lettres
+
+  // Calcul de la taille pour que le mot rentre dans ~460px de large et ~200px de haut
+  const totalRaw = maxChars * (letterW + padding) - padding;
+  const scaleX = Math.min(1.8, 460 / totalRaw);
+  const scaleY = scaleX;
+
+  const scaledLetterW = letterW * scaleX;
+  const scaledLetterH = letterH * scaleY;
+  const scaledPad = padding * scaleX;
+  const totalW = maxChars * (scaledLetterW + scaledPad) - scaledPad;
+
+  const startX = (500 - totalW) / 2;
+  const startY = (500 - scaledLetterH) / 2;
+
+  const paths = [];
+
+  for (let ci = 0; ci < maxChars; ci++) {
+    const ch = letters[ci];
+    const strokes = FONT[ch] || [];
+    const ox = startX + ci * (scaledLetterW + scaledPad);
+    const oy = startY;
+
+    for (const stroke of strokes) {
+      paths.push(transformStroke(stroke, ox, oy, scaleX, scaleY));
+    }
+  }
+
+  return paths.filter(Boolean);
+}
+
+/**
+ * Transforme un stroke SVG (M/L/C/A avec coords) en appliquant offset + scale
+ */
+function transformStroke(d, ox, oy, sx, sy) {
+  // Remplace toutes les paires de coordonnées
+  return d.replace(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g, (_, x, y) => {
+    return `${(parseFloat(x) * sx + ox).toFixed(1)} ${(parseFloat(y) * sy + oy).toFixed(1)}`;
+  });
+}
+
+// ── RENDU PRINCIPAL ───────────────────────────────────────────────────────────
+
+/**
+ * Remplit le SVG #svg-output avec des mots Wikipedia le long des chemins.
+ * @param {string[]} paths
+ * @param {{title:string, text:string, pageId:number}} wikiData
+ * @param {'mono'|'gold'|'spectrum'} colorMode
  */
 export function render(paths, wikiData, colorMode = 'mono') {
   const svg = document.getElementById('svg-output');
@@ -27,9 +113,9 @@ export function render(paths, wikiData, colorMode = 'mono') {
   const palette = PALETTES[colorMode] || PALETTES.mono;
   const fontSize = 5.5;
   const charWidth = fontSize * 0.55;
-  const spaceWidth = fontSize * 0.8;
+  const spaceWidth = fontSize * 0.9;
 
-  // Mesure des longueurs via SVG temporaire hors écran
+  // Mesure des longueurs
   const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   tmpSvg.setAttribute('viewBox', '0 0 500 500');
   tmpSvg.style.cssText = 'position:absolute;visibility:hidden;width:0;height:0';
@@ -41,7 +127,7 @@ export function render(paths, wikiData, colorMode = 'mono') {
     tmpSvg.appendChild(el);
     const len = el.getTotalLength();
     tmpSvg.removeChild(el);
-    return len;
+    return Math.max(len, 0);
   });
   document.body.removeChild(tmpSvg);
 
@@ -49,11 +135,10 @@ export function render(paths, wikiData, colorMode = 'mono') {
   const avgWordPx = (rawWords.reduce((a, w) => a + w.length, 0) / rawWords.length) * charWidth + spaceWidth;
   const repeats = Math.ceil(totalLength / (rawWords.length * avgWordPx)) + 2;
 
-  // Mots en boucle pour couvrir tous les chemins
   const words = [];
   for (let i = 0; i < repeats; i++) words.push(...rawWords);
 
-  // Defs pour les chemins nommés (textPath href)
+  // Defs
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   paths.forEach((d, pi) => {
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
