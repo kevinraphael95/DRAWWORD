@@ -112,8 +112,6 @@ export function render(paths, wikiData, colorMode = 'mono') {
 
   const palette = PALETTES[colorMode] || PALETTES.mono;
   const fontSize = 5.5;
-  const charWidth = fontSize * 0.55;
-  const spaceWidth = fontSize * 0.9;
 
   // Mesure des longueurs
   const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -132,8 +130,9 @@ export function render(paths, wikiData, colorMode = 'mono') {
   document.body.removeChild(tmpSvg);
 
   const totalLength = pathLengths.reduce((a, b) => a + b, 0);
-  const avgWordPx = (rawWords.reduce((a, w) => a + w.length, 0) / rawWords.length) * charWidth + spaceWidth;
-  const repeats = Math.ceil(totalLength / (rawWords.length * avgWordPx)) + 2;
+  // Estimation : ~4px par caractère en moyenne à fontSize 5.5
+  const approxWordPx = (rawWords.reduce((a, w) => a + w.length, 0) / rawWords.length) * (fontSize * 0.52) + fontSize;
+  const repeats = Math.ceil(totalLength / (rawWords.length * approxWordPx)) + 2;
 
   const words = [];
   for (let i = 0; i < repeats; i++) words.push(...rawWords);
@@ -148,6 +147,24 @@ export function render(paths, wikiData, colorMode = 'mono') {
   });
   svg.appendChild(defs);
 
+  // Élément texte temporaire pour mesurer les vrais px de chaque mot
+  const ruler = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  ruler.setAttribute('font-family', 'DM Mono, monospace');
+  ruler.setAttribute('font-size', fontSize);
+  ruler.setAttribute('letter-spacing', '0.05em');
+  ruler.style.visibility = 'hidden';
+  svg.appendChild(ruler);
+
+  // Cache de largeurs pour éviter de re-mesurer les mêmes mots
+  const widthCache = {};
+  function measureWord(word) {
+    if (widthCache[word] !== undefined) return widthCache[word];
+    ruler.textContent = word + ' ';
+    const w = ruler.getComputedTextLength();
+    widthCache[word] = w;
+    return w;
+  }
+
   let wordIdx = 0;
   let colorIdx = 0;
 
@@ -158,8 +175,13 @@ export function render(paths, wikiData, colorMode = 'mono') {
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     let dist = 0;
 
-    while (dist < pathLen - 1) {
+    while (dist < pathLen) {
       const word = words[wordIdx % words.length];
+      const wordPx = measureWord(word);
+
+      // Ne pas placer si le mot déborde (évite les coupures en fin de chemin)
+      if (dist + wordPx > pathLen) break;
+
       wordIdx++;
       const color = palette[colorIdx % palette.length];
       colorIdx++;
@@ -172,17 +194,20 @@ export function render(paths, wikiData, colorMode = 'mono') {
 
       const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
       tp.setAttribute('href', '#tv' + pi);
-      tp.setAttribute('startOffset', dist.toFixed(1));
+      // startOffset en % = position exacte sans dérive
+      tp.setAttribute('startOffset', ((dist / pathLen) * 100).toFixed(3) + '%');
       tp.textContent = word + ' ';
 
       t.appendChild(tp);
       g.appendChild(t);
 
-      dist += word.length * charWidth + spaceWidth;
+      dist += wordPx;
     }
 
     svg.appendChild(g);
   });
+
+  svg.removeChild(ruler);
 }
 
 /**
