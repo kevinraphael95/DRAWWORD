@@ -234,11 +234,7 @@
         paths = SHAPES[currentShape];
       }
 
-      // En mode mot : répéter le mot lui-même comme texte pour remplir les lettres
-      const textData = wordMode
-        ? { ...wikiData, text: (wordText + ' ').repeat(800) }
-        : wikiData;
-      render(paths, textData, colorModes[colorMode], textStyle);
+      render(paths, wikiData, colorModes[colorMode], textStyle);
 
       document.getElementById('style-bar').classList.add('visible');
 
