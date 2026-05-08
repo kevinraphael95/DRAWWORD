@@ -59,6 +59,19 @@
     <button class="btn" id="btn-export">Exporter SVG</button>
   </div>
 
+  <!-- STYLE BAR (après génération) -->
+  <div class="style-bar" id="style-bar">
+    <button class="style-btn" id="sty-bold" title="Gras"><strong>G</strong></button>
+    <button class="style-btn" id="sty-italic" title="Italique"><em>I</em></button>
+    <button class="style-btn" id="sty-under" title="Souligné"><u>S</u></button>
+    <div class="style-sep"></div>
+    <label class="style-color-wrap" title="Couleur du texte">
+      <input type="color" id="sty-color" value="#2a2620">
+      <span>Couleur</span>
+    </label>
+    <button class="style-btn style-reset" id="sty-reset" title="Réinitialiser">↺</button>
+  </div>
+
   <!-- CANVAS -->
   <div class="canvas-wrap">
     <div class="shimmer" id="shimmer"></div>
@@ -87,7 +100,7 @@
 <script type="module">
   import { SHAPES, generateRandom } from './shapes.js';
   import { searchWiki, fetchWikiByTitle, fetchWikiRandom } from './wiki.js';
-  import { render, exportSVG, buildWordPaths } from './render.js';
+  import { render, exportSVG, buildWordPaths, applyStyle } from './render.js';
 
   // ── STATE ──
   let currentShape = 'bird';
@@ -96,6 +109,7 @@
   const colorLabels = ['Mono', 'Or', 'Spectre'];
   let selectedTitle = null;
   let loading = false;
+  let textStyle = { bold: false, italic: false, underline: false, color: null };
 
   // ── SEARCH ──
   const wikiInput = document.getElementById('wiki-input');
@@ -220,7 +234,13 @@
         paths = SHAPES[currentShape];
       }
 
-      render(paths, wikiData, colorModes[colorMode]);
+      // En mode mot : répéter le mot lui-même comme texte pour remplir les lettres
+      const textData = wordMode
+        ? { ...wikiData, text: (wordText + ' ').repeat(800) }
+        : wikiData;
+      render(paths, textData, colorModes[colorMode], textStyle);
+
+      document.getElementById('style-bar').classList.add('visible');
 
       document.getElementById('wiki-panel-title').textContent = wikiData.title;
       document.getElementById('wiki-excerpt').textContent = wikiData.text.slice(0, 300) + '…';
@@ -244,6 +264,33 @@
   document.getElementById('btn-color').addEventListener('click', () => {
     colorMode = (colorMode + 1) % colorModes.length;
     document.getElementById('btn-color').textContent = `Couleur : ${colorLabels[colorMode]}`;
+  });
+
+  // ── STYLE BAR ──
+  function toggleStyleBtn(id, key) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('click', () => {
+      textStyle[key] = !textStyle[key];
+      btn.classList.toggle('active', textStyle[key]);
+      applyStyle(textStyle);
+    });
+  }
+  toggleStyleBtn('sty-bold',   'bold');
+  toggleStyleBtn('sty-italic', 'italic');
+  toggleStyleBtn('sty-under',  'underline');
+
+  document.getElementById('sty-color').addEventListener('input', e => {
+    textStyle.color = e.target.value;
+    applyStyle(textStyle);
+  });
+
+  document.getElementById('sty-reset').addEventListener('click', () => {
+    textStyle = { bold: false, italic: false, underline: false, color: null };
+    document.getElementById('sty-bold').classList.remove('active');
+    document.getElementById('sty-italic').classList.remove('active');
+    document.getElementById('sty-under').classList.remove('active');
+    document.getElementById('sty-color').value = '#2a2620';
+    applyStyle(textStyle);
   });
 
   // ── EXPORT ──
