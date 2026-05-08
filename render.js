@@ -111,7 +111,7 @@ export function render(paths, wikiData, colorMode = 'mono') {
   svg.appendChild(bg);
 
   const palette = PALETTES[colorMode] || PALETTES.mono;
-  const fontSize = 5.5;
+  const fontSize = 7;
 
   // Mesure des longueurs
   const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -159,7 +159,7 @@ export function render(paths, wikiData, colorMode = 'mono') {
   const widthCache = {};
   function measureWord(word) {
     if (widthCache[word] !== undefined) return widthCache[word];
-    ruler.textContent = word + ' ';
+    ruler.textContent = word + '  '; // deux espaces = séparation visible
     const w = ruler.getComputedTextLength();
     widthCache[word] = w;
     return w;
@@ -196,7 +196,7 @@ export function render(paths, wikiData, colorMode = 'mono') {
       tp.setAttribute('href', '#tv' + pi);
       // startOffset en % = position exacte sans dérive
       tp.setAttribute('startOffset', ((dist / pathLen) * 100).toFixed(3) + '%');
-      tp.textContent = word + ' ';
+      tp.textContent = word + '  ';
 
       t.appendChild(tp);
       g.appendChild(t);
