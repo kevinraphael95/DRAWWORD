@@ -1,21 +1,19 @@
 // render.js — Rendu SVG et export
 
 const PALETTES = {
-  mono:     ['#3a3630', '#5a5550', '#8a8278'],
-  gold:     ['#bf4020', '#c87030', '#d4a060'],
+  mono:     ['#2a2620', '#4a4540', '#7a7570'],
+  gold:     ['#bf4020', '#c87030', '#a03010'],
   spectrum: ['#bf4020', '#306080', '#5a7040', '#7050a0', '#c87030'],
 };
 
 /**
  * Remplit le SVG #svg-output avec des mots Wikipedia tracés le long des chemins.
- * @param {string[]} paths  - Tableau de commandes SVG path
- * @param {{title:string, text:string, pageId:number}} wikiData
- * @param {'mono'|'gold'|'spectrum'} colorMode
+ * Le texte tourne en boucle pour couvrir tous les chemins intégralement.
  */
 export function render(paths, wikiData, colorMode = 'mono') {
   const svg = document.getElementById('svg-output');
-  const words = wikiData.text.split(/\s+/).filter(Boolean);
-  if (!words.length) return;
+  const rawWords = wikiData.text.split(/\s+/).filter(Boolean);
+  if (!rawWords.length || !paths.length) return;
 
   svg.innerHTML = '';
 
@@ -27,52 +25,75 @@ export function render(paths, wikiData, colorMode = 'mono') {
   svg.appendChild(bg);
 
   const palette = PALETTES[colorMode] || PALETTES.mono;
-  let wordIndex = 0;
+  const fontSize = 5.5;
+  const charWidth = fontSize * 0.55;
+  const spaceWidth = fontSize * 0.8;
 
-  paths.forEach((pathD, pi) => {
-    // Mesure de la longueur du chemin
-    const tmp = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    tmp.setAttribute('d', pathD);
-    svg.appendChild(tmp);
-    const totalLen = tmp.getTotalLength();
-    svg.removeChild(tmp);
+  // Mesure des longueurs via SVG temporaire hors écran
+  const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  tmpSvg.setAttribute('viewBox', '0 0 500 500');
+  tmpSvg.style.cssText = 'position:absolute;visibility:hidden;width:0;height:0';
+  document.body.appendChild(tmpSvg);
+
+  const pathLengths = paths.map(d => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('d', d);
+    tmpSvg.appendChild(el);
+    const len = el.getTotalLength();
+    tmpSvg.removeChild(el);
+    return len;
+  });
+  document.body.removeChild(tmpSvg);
+
+  const totalLength = pathLengths.reduce((a, b) => a + b, 0);
+  const avgWordPx = (rawWords.reduce((a, w) => a + w.length, 0) / rawWords.length) * charWidth + spaceWidth;
+  const repeats = Math.ceil(totalLength / (rawWords.length * avgWordPx)) + 2;
+
+  // Mots en boucle pour couvrir tous les chemins
+  const words = [];
+  for (let i = 0; i < repeats; i++) words.push(...rawWords);
+
+  // Defs pour les chemins nommés (textPath href)
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  paths.forEach((d, pi) => {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    el.setAttribute('id', 'tv' + pi);
+    el.setAttribute('d', d);
+    defs.appendChild(el);
+  });
+  svg.appendChild(defs);
+
+  let wordIdx = 0;
+  let colorIdx = 0;
+
+  paths.forEach((_, pi) => {
+    const pathLen = pathLengths[pi];
+    if (pathLen < 5) return;
 
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    const pid = 'p' + pi;
-
-    // Chemin invisible (pour textPath)
-    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    pathEl.setAttribute('id', pid);
-    pathEl.setAttribute('d', pathD);
-    pathEl.setAttribute('fill', 'none');
-    pathEl.setAttribute('stroke', 'none');
-    g.appendChild(pathEl);
-
-    // Placement des mots le long du chemin
     let dist = 0;
-    let seg = 0;
-    while (dist < totalLen) {
-      const word = words[wordIndex % words.length];
-      wordIndex++;
-      const fontSize = 4.5 + Math.random() * 2;
-      const color = palette[seg % palette.length];
+
+    while (dist < pathLen - 1) {
+      const word = words[wordIdx % words.length];
+      wordIdx++;
+      const color = palette[colorIdx % palette.length];
+      colorIdx++;
 
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       t.setAttribute('font-family', 'DM Mono, monospace');
       t.setAttribute('font-size', fontSize);
       t.setAttribute('fill', color);
-      t.setAttribute('letter-spacing', '0.08em');
+      t.setAttribute('letter-spacing', '0.05em');
 
       const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
-      tp.setAttribute('href', '#' + pid);
-      tp.setAttribute('startOffset', ((dist / totalLen) * 100).toFixed(2) + '%');
+      tp.setAttribute('href', '#tv' + pi);
+      tp.setAttribute('startOffset', dist.toFixed(1));
       tp.textContent = word + ' ';
 
       t.appendChild(tp);
       g.appendChild(t);
 
-      dist += word.length * fontSize * 0.6 + fontSize * 1.2;
-      seg++;
+      dist += word.length * charWidth + spaceWidth;
     }
 
     svg.appendChild(g);
@@ -80,11 +101,11 @@ export function render(paths, wikiData, colorMode = 'mono') {
 }
 
 /**
- * Télécharge le SVG courant en fichier .svg
+ * Télécharge le SVG courant en .svg
  */
 export function exportSVG() {
   const svg = document.getElementById('svg-output');
-  const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
+  const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'typographie-vivante.svg';
