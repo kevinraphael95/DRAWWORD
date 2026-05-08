@@ -45,46 +45,49 @@ export function buildWordPaths(word) {
   const letters = word.toUpperCase().split('').filter(c => FONT[c] !== undefined);
   if (!letters.length) return [];
 
-  const maxChars = Math.min(letters.length, 10);
-  const letterW = 50, letterH = 70;
-  const padding = 8; // espace entre lettres
+  const maxChars = Math.min(letters.length, 11);
+  // Espace de dessin : 460×300, centré sur le canvas 500×500
+  const drawW = 460, drawH = 300;
+  const letterW = 50, letterH = 70, gap = 6;
+  const totalRaw = maxChars * letterW + (maxChars - 1) * gap;
+  const scale = Math.min(drawW / totalRaw, drawH / letterH);
 
-  // Calcul de la taille pour que le mot rentre dans ~460px de large et ~200px de haut
-  const totalRaw = maxChars * (letterW + padding) - padding;
-  const scaleX = Math.min(1.8, 460 / totalRaw);
-  const scaleY = scaleX;
-
-  const scaledLetterW = letterW * scaleX;
-  const scaledLetterH = letterH * scaleY;
-  const scaledPad = padding * scaleX;
-  const totalW = maxChars * (scaledLetterW + scaledPad) - scaledPad;
+  const scaledLetterW = letterW * scale;
+  const scaledLetterH = letterH * scale;
+  const scaledGap = gap * scale;
+  const totalW = maxChars * scaledLetterW + (maxChars - 1) * scaledGap;
 
   const startX = (500 - totalW) / 2;
   const startY = (500 - scaledLetterH) / 2;
 
   const paths = [];
-
   for (let ci = 0; ci < maxChars; ci++) {
     const ch = letters[ci];
     const strokes = FONT[ch] || [];
-    const ox = startX + ci * (scaledLetterW + scaledPad);
+    const ox = startX + ci * (scaledLetterW + scaledGap);
     const oy = startY;
-
     for (const stroke of strokes) {
-      paths.push(transformStroke(stroke, ox, oy, scaleX, scaleY));
+      paths.push(transformStroke(stroke, ox, oy, scale));
     }
   }
-
   return paths.filter(Boolean);
 }
 
 /**
- * Transforme un stroke SVG (M/L/C/A avec coords) en appliquant offset + scale
+ * Parse et retransforme les coordonnées d'un path SVG
+ * Gère correctement M, L, C, Q et leurs variantes
  */
-function transformStroke(d, ox, oy, sx, sy) {
-  // Remplace toutes les paires de coordonnées
-  return d.replace(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g, (_, x, y) => {
-    return `${(parseFloat(x) * sx + ox).toFixed(1)} ${(parseFloat(y) * sy + oy).toFixed(1)}`;
+function transformStroke(d, ox, oy, s) {
+  const tx = n => (parseFloat(n) * s + ox).toFixed(1);
+  const ty = n => (parseFloat(n) * s + oy).toFixed(1);
+
+  return d.replace(/([MLCQ])\s*([\d\s.\-]+)/gi, (_, cmd, args) => {
+    const nums = args.trim().split(/\s+/);
+    const out = [];
+    for (let i = 0; i < nums.length; i += 2) {
+      out.push(tx(nums[i]) + ' ' + ty(nums[i + 1]));
+    }
+    return cmd + ' ' + out.join(' ');
   });
 }
 
