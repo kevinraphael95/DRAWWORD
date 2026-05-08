@@ -99,7 +99,7 @@ function transformStroke(d, ox, oy, s) {
  * @param {{title:string, text:string, pageId:number}} wikiData
  * @param {'mono'|'gold'|'spectrum'} colorMode
  */
-export function render(paths, wikiData, colorMode = 'mono') {
+export function render(paths, wikiData, colorMode = 'mono', textStyle = {}) {
   const svg = document.getElementById('svg-output');
   const rawWords = wikiData.text.split(/\s+/).filter(Boolean);
   if (!rawWords.length || !paths.length) return;
@@ -192,8 +192,11 @@ export function render(paths, wikiData, colorMode = 'mono') {
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       t.setAttribute('font-family', 'DM Mono, monospace');
       t.setAttribute('font-size', fontSize);
-      t.setAttribute('fill', color);
+      t.setAttribute('fill', (textStyle.color) || color);
       t.setAttribute('letter-spacing', '0.05em');
+      if (textStyle.bold)   t.setAttribute('font-weight', 'bold');
+      if (textStyle.italic) t.setAttribute('font-style', 'italic');
+      if (textStyle.underline) t.setAttribute('text-decoration', 'underline');
 
       const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
       tp.setAttribute('href', '#tv' + pi);
@@ -211,6 +214,21 @@ export function render(paths, wikiData, colorMode = 'mono') {
   });
 
   svg.removeChild(ruler);
+}
+
+/**
+ * Applique un style (bold/italic/underline/color) à tous les <text> du SVG courant
+ * sans re-générer — mise à jour instantanée
+ */
+export function applyStyle({ bold, italic, underline, color }) {
+  const svg = document.getElementById('svg-output');
+  svg.querySelectorAll('text').forEach(t => {
+    if (color) t.setAttribute('fill', color);
+    else t.removeAttribute('fill'); // laisse la couleur de palette
+    bold   ? t.setAttribute('font-weight', 'bold')   : t.removeAttribute('font-weight');
+    italic ? t.setAttribute('font-style', 'italic')  : t.removeAttribute('font-style');
+    underline ? t.setAttribute('text-decoration', 'underline') : t.removeAttribute('text-decoration');
+  });
 }
 
 /**
