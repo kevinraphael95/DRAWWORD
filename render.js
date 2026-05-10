@@ -1,13 +1,14 @@
-// render.js — Rendu SVG, mode mot, et export
+// render.js — Rendu SVG, mode mot, mode paint, export
 
 const PALETTES = {
-  mono:     ['#2a2620', '#4a4540', '#7a7570'],
-  gold:     ['#bf4020', '#c87030', '#a03010'],
-  spectrum: ['#bf4020', '#306080', '#5a7040', '#7050a0', '#c87030'],
+  mono:     ['#1a1714', '#3d3830', '#6b6560'],
+  gold:     ['#b33a18', '#c06828', '#8f2a0c'],
+  spectrum: ['#b33a18', '#285a75', '#4a6030', '#603d8a', '#b86020'],
+  neon:     ['#00c8a0', '#c800a0', '#00a0c8', '#c8a000'],
+  pastel:   ['#c06080', '#6080c0', '#60a060', '#a06020'],
 };
 
-// ── POLICE PIXEL 5×7 (paths dans un espace 0-50 × 0-70) ──────────────────────
-// Chaque lettre = tableau de segments [x1,y1,x2,y2,...] ou courbes SVG
+// ── POLICE PIXEL 5×7 ──────────────────────────────────────────────────────────
 const FONT = {
   A: ['M 25 4 L 4 66 M 25 4 L 46 66 M 10 42 L 40 42'],
   B: ['M 8 4 L 8 66 M 8 4 C 38 4 42 16 42 22 C 42 30 34 34 8 34 M 8 34 C 40 34 44 46 44 52 C 44 62 36 66 8 66'],
@@ -38,67 +39,61 @@ const FONT = {
   ' ': [],
 };
 
-/**
- * Convertit un mot en tableau de paths SVG (lettres positionnées sur le canvas 500×500)
- */
 export function buildWordPaths(word) {
   const letters = word.toUpperCase().split('').filter(c => FONT[c] !== undefined);
   if (!letters.length) return [];
-
   const maxChars = Math.min(letters.length, 11);
-  // Espace de dessin : 460×300, centré sur le canvas 500×500
   const drawW = 460, drawH = 300;
   const letterW = 50, letterH = 70, gap = 6;
   const totalRaw = maxChars * letterW + (maxChars - 1) * gap;
   const scale = Math.min(drawW / totalRaw, drawH / letterH);
-
-  const scaledLetterW = letterW * scale;
-  const scaledLetterH = letterH * scale;
-  const scaledGap = gap * scale;
+  const scaledLetterW = letterW * scale, scaledGap = gap * scale, scaledLetterH = letterH * scale;
   const totalW = maxChars * scaledLetterW + (maxChars - 1) * scaledGap;
-
-  const startX = (500 - totalW) / 2;
-  const startY = (500 - scaledLetterH) / 2;
-
+  const startX = (500 - totalW) / 2, startY = (500 - scaledLetterH) / 2;
   const paths = [];
   for (let ci = 0; ci < maxChars; ci++) {
-    const ch = letters[ci];
-    const strokes = FONT[ch] || [];
-    const ox = startX + ci * (scaledLetterW + scaledGap);
-    const oy = startY;
-    for (const stroke of strokes) {
-      paths.push(transformStroke(stroke, ox, oy, scale));
-    }
+    const ch = letters[ci], strokes = FONT[ch] || [];
+    const ox = startX + ci * (scaledLetterW + scaledGap), oy = startY;
+    for (const stroke of strokes) paths.push(transformStroke(stroke, ox, oy, scale));
   }
   return paths.filter(Boolean);
 }
 
-/**
- * Parse et retransforme les coordonnées d'un path SVG
- * Gère correctement M, L, C, Q et leurs variantes
- */
 function transformStroke(d, ox, oy, s) {
   const tx = n => (parseFloat(n) * s + ox).toFixed(1);
   const ty = n => (parseFloat(n) * s + oy).toFixed(1);
-
   return d.replace(/([MLCQ])\s*([\d\s.\-]+)/gi, (_, cmd, args) => {
     const nums = args.trim().split(/\s+/);
     const out = [];
-    for (let i = 0; i < nums.length; i += 2) {
-      out.push(tx(nums[i]) + ' ' + ty(nums[i + 1]));
-    }
+    for (let i = 0; i < nums.length; i += 2) out.push(tx(nums[i]) + ' ' + ty(nums[i + 1]));
     return cmd + ' ' + out.join(' ');
   });
 }
 
-// ── RENDU PRINCIPAL ───────────────────────────────────────────────────────────
+// ── PAINT MODE : convertit des polylines canvas en paths SVG ─────────────────
 
 /**
- * Remplit le SVG #svg-output avec des mots Wikipedia le long des chemins.
- * @param {string[]} paths
- * @param {{title:string, text:string, pageId:number}} wikiData
- * @param {'mono'|'gold'|'spectrum'} colorMode
+ * Prend un tableau de strokes [{points:[{x,y},...]}] dessinés sur canvas
+ * et remplit chacun de mots Wikipedia le long du tracé.
  */
+export function renderPaint(strokes, wikiData, colorMode = 'mono', textStyle = {}) {
+  const svg = document.getElementById('svg-output');
+  if (!strokes.length) return;
+
+  // Convertit les strokes en paths SVG simplifiés
+  const paths = strokes.map(stroke => {
+    const pts = stroke.points;
+    if (pts.length < 2) return null;
+    // Simplification : on garde 1 point sur 3 minimum pour éviter les paths trop lourds
+    const simplified = pts.filter((_, i) => i % 2 === 0 || i === pts.length - 1);
+    return 'M ' + simplified.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ');
+  }).filter(Boolean);
+
+  render(paths, wikiData, colorMode, textStyle);
+}
+
+// ── RENDU PRINCIPAL ───────────────────────────────────────────────────────────
+
 export function render(paths, wikiData, colorMode = 'mono', textStyle = {}) {
   const svg = document.getElementById('svg-output');
   const rawWords = wikiData.text.split(/\s+/).filter(Boolean);
@@ -106,17 +101,17 @@ export function render(paths, wikiData, colorMode = 'mono', textStyle = {}) {
 
   svg.innerHTML = '';
 
-  // Fond
+  // Fond (couleur via CSS var pour dark/light)
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   bg.setAttribute('width', '500');
   bg.setAttribute('height', '500');
-  bg.setAttribute('fill', '#ebe4d6');
+  bg.setAttribute('fill', 'var(--svg-bg)');
   svg.appendChild(bg);
 
   const palette = PALETTES[colorMode] || PALETTES.mono;
   const fontSize = 7;
 
-  // Mesure des longueurs
+  // Mesure des longueurs de path
   const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   tmpSvg.setAttribute('viewBox', '0 0 500 500');
   tmpSvg.style.cssText = 'position:absolute;visibility:hidden;width:0;height:0';
@@ -133,113 +128,99 @@ export function render(paths, wikiData, colorMode = 'mono', textStyle = {}) {
   document.body.removeChild(tmpSvg);
 
   const totalLength = pathLengths.reduce((a, b) => a + b, 0);
-  // Estimation : ~4px par caractère en moyenne à fontSize 5.5
   const approxWordPx = (rawWords.reduce((a, w) => a + w.length, 0) / rawWords.length) * (fontSize * 0.52) + fontSize;
   const repeats = Math.ceil(totalLength / (rawWords.length * approxWordPx)) + 2;
-
   const words = [];
   for (let i = 0; i < repeats; i++) words.push(...rawWords);
 
-  // Defs
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   paths.forEach((d, pi) => {
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    el.setAttribute('id', 'tv' + pi);
+    el.setAttribute('id', 'dw' + pi);
     el.setAttribute('d', d);
     defs.appendChild(el);
   });
   svg.appendChild(defs);
 
-  // Élément texte temporaire pour mesurer les vrais px de chaque mot
   const ruler = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  ruler.setAttribute('font-family', 'DM Mono, monospace');
+  ruler.setAttribute('font-family', 'JetBrains Mono, monospace');
   ruler.setAttribute('font-size', fontSize);
   ruler.setAttribute('letter-spacing', '0.05em');
   ruler.style.visibility = 'hidden';
   svg.appendChild(ruler);
 
-  // Cache de largeurs pour éviter de re-mesurer les mêmes mots
   const widthCache = {};
   function measureWord(word) {
     if (widthCache[word] !== undefined) return widthCache[word];
-    ruler.textContent = word + '  '; // deux espaces = séparation visible
+    ruler.textContent = word + '  ';
     const w = ruler.getComputedTextLength();
     widthCache[word] = w;
     return w;
   }
 
-  let wordIdx = 0;
-  let colorIdx = 0;
+  let wordIdx = 0, colorIdx = 0;
 
   paths.forEach((_, pi) => {
     const pathLen = pathLengths[pi];
     if (pathLen < 5) return;
-
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     let dist = 0;
 
     while (dist < pathLen) {
       const word = words[wordIdx % words.length];
       const wordPx = measureWord(word);
-
-      // Ne pas placer si le mot déborde (évite les coupures en fin de chemin)
       if (dist + wordPx > pathLen) break;
-
       wordIdx++;
-      const color = palette[colorIdx % palette.length];
+      const color = (textStyle.color) || palette[colorIdx % palette.length];
       colorIdx++;
 
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      t.setAttribute('font-family', 'DM Mono, monospace');
+      t.setAttribute('font-family', 'JetBrains Mono, monospace');
       t.setAttribute('font-size', fontSize);
-      t.setAttribute('fill', (textStyle.color) || color);
+      t.setAttribute('fill', color);
       t.setAttribute('letter-spacing', '0.05em');
-      if (textStyle.bold)   t.setAttribute('font-weight', 'bold');
-      if (textStyle.italic) t.setAttribute('font-style', 'italic');
+      if (textStyle.bold)      t.setAttribute('font-weight', 'bold');
+      if (textStyle.italic)    t.setAttribute('font-style', 'italic');
       if (textStyle.underline) t.setAttribute('text-decoration', 'underline');
 
       const tp = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
-      tp.setAttribute('href', '#tv' + pi);
-      // startOffset en % = position exacte sans dérive
+      tp.setAttribute('href', '#dw' + pi);
       tp.setAttribute('startOffset', ((dist / pathLen) * 100).toFixed(3) + '%');
       tp.textContent = word + '  ';
-
       t.appendChild(tp);
       g.appendChild(t);
-
       dist += wordPx;
     }
-
     svg.appendChild(g);
   });
 
   svg.removeChild(ruler);
 }
 
-/**
- * Applique un style (bold/italic/underline/color) à tous les <text> du SVG courant
- * sans re-générer — mise à jour instantanée
- */
 export function applyStyle({ bold, italic, underline, color }) {
   const svg = document.getElementById('svg-output');
   svg.querySelectorAll('text').forEach(t => {
     if (color) t.setAttribute('fill', color);
-    else t.removeAttribute('fill'); // laisse la couleur de palette
-    bold   ? t.setAttribute('font-weight', 'bold')   : t.removeAttribute('font-weight');
-    italic ? t.setAttribute('font-style', 'italic')  : t.removeAttribute('font-style');
-    underline ? t.setAttribute('text-decoration', 'underline') : t.removeAttribute('text-decoration');
+    else t.removeAttribute('fill');
+    bold      ? t.setAttribute('font-weight', 'bold')         : t.removeAttribute('font-weight');
+    italic    ? t.setAttribute('font-style', 'italic')        : t.removeAttribute('font-style');
+    underline ? t.setAttribute('text-decoration', 'underline'): t.removeAttribute('text-decoration');
   });
 }
 
-/**
- * Télécharge le SVG courant en .svg
- */
 export function exportSVG() {
   const svg = document.getElementById('svg-output');
-  const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+  const clone = svg.cloneNode(true);
+  // Inliner la couleur de fond réelle selon le thème courant
+  const bgRect = clone.querySelector('rect');
+  if (bgRect) {
+    const computedBg = getComputedStyle(document.documentElement).getPropertyValue('--svg-bg').trim();
+    bgRect.setAttribute('fill', computedBg || '#f0ece2');
+  }
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'typographie-vivante.svg';
+  a.download = 'drawword.svg';
   a.click();
   URL.revokeObjectURL(a.href);
 }

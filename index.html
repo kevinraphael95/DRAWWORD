@@ -1,87 +1,142 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Typographie Vivante</title>
+  <title>DrawWord</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Barlow:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav>
-  <div class="logo">Typographie <em>Vivante</em></div>
-  <a class="nav-gh" href="https://github.com" target="_blank">GitHub ↗</a>
+  <span class="nav-logo">Draw<em>Word</em></span>
+  <div class="nav-right">
+    <button class="nav-btn" id="btn-theme" title="Thème clair / sombre">◐</button>
+    <a class="nav-link" href="https://github.com" target="_blank">GitHub ↗</a>
+  </div>
 </nav>
 
-<main class="body">
+<header class="hero">
+  <h1>Draw<em>Word</em></h1>
+  <p class="hero-sub">Dessinez une forme — Wikipedia la remplit de sens</p>
+</header>
 
-  <!-- SEARCH -->
-  <div class="search-wrap">
-    <div class="search-row">
-      <input type="text" id="wiki-input" placeholder="Article Wikipedia… (ex: jazz, fromage, Darwin)">
-      <button class="btn-icon" id="btn-search">⌕</button>
+<main>
+
+  <div class="top-row">
+
+    <div class="panel search-panel">
+      <div class="panel-label">Source Wikipedia</div>
+      <div class="search-row">
+        <input type="text" id="wiki-input" placeholder="jazz, Darwin, fromage…" autocomplete="off">
+        <button class="icon-btn" id="btn-search" title="Rechercher">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+      </div>
+      <div class="suggestions" id="suggestions"></div>
+      <div class="selected-badge">
+        <span class="badge-dot"></span>
+        <span id="sel-label">Article aléatoire</span>
+        <button class="badge-clear" id="btn-clear">✕</button>
+      </div>
     </div>
-    <div class="suggestions" id="suggestions"></div>
-    <div class="selected-label">
-      <span class="dot"></span>
-      <span id="sel-label">Article aléatoire</span>
-      <button class="btn-clear" id="btn-clear">✕</button>
+
+    <div class="panel mode-panel">
+      <div class="panel-label">Mode de dessin</div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="shape">
+          <span class="mode-icon">◈</span><span>Forme prédéfinie</span>
+        </button>
+        <button class="mode-tab" data-mode="word">
+          <span class="mode-icon">Aa</span><span>Mot / Texte</span>
+        </button>
+        <button class="mode-tab" data-mode="paint">
+          <span class="mode-icon">✎</span><span>Dessin libre</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SHAPE -->
+  <div class="panel mode-content active" id="content-shape">
+    <div class="panel-label">Choisir une forme</div>
+    <div class="shape-grid">
+      <button class="shape-btn active" data-shape="bird"   title="Oiseau">🕊</button>
+      <button class="shape-btn"        data-shape="circle" title="Cercle">○</button>
+      <button class="shape-btn"        data-shape="star"   title="Étoile">☆</button>
+      <button class="shape-btn"        data-shape="heart"  title="Cœur">♡</button>
+      <button class="shape-btn"        data-shape="wave"   title="Vague">〜</button>
+      <button class="shape-btn"        data-shape="fish"   title="Poisson">🐟</button>
+      <button class="shape-btn"        data-shape="spiral" title="Spirale">◎</button>
+      <button class="shape-btn"        data-shape="tree"   title="Arbre">🌲</button>
+      <button class="shape-btn"        data-shape="random" title="Aléatoire">⚄</button>
     </div>
   </div>
 
-  <!-- WORD MODE -->
-  <label class="wordmode">
-    <input type="checkbox" id="chk-word">
-    <span class="pill"></span>
-    Dessiner un mot
-  </label>
-  <input type="text" id="word-input" class="word-input" placeholder="Ex: FROMAGE" maxlength="10">
+  <!-- WORD -->
+  <div class="panel mode-content" id="content-word">
+    <div class="panel-label">Mot à dessiner (A–Z, max 11 lettres)</div>
+    <input type="text" class="word-field" id="word-input" placeholder="Ex : FROMAGE" maxlength="11">
+  </div>
 
-  <!-- SHAPES (cachées en mode mot) -->
-  <div class="shape-row" id="shape-row">
-    <button class="shape-btn active" data-shape="bird"   title="Oiseau">🕊</button>
-    <button class="shape-btn"        data-shape="circle" title="Cercle">○</button>
-    <button class="shape-btn"        data-shape="star"   title="Étoile">☆</button>
-    <button class="shape-btn"        data-shape="heart"  title="Cœur">♡</button>
-    <button class="shape-btn"        data-shape="wave"   title="Vague">〜</button>
-    <button class="shape-btn"        data-shape="fish"   title="Poisson">🐟</button>
-    <button class="shape-btn"        data-shape="spiral" title="Spirale">◎</button>
-    <button class="shape-btn"        data-shape="tree"   title="Arbre">🌲</button>
-    <button class="shape-btn"        data-shape="random" title="Aléatoire">⚄</button>
+  <!-- PAINT -->
+  <div class="panel mode-content" id="content-paint">
+    <div class="panel-label">Dessin libre — les mots wiki suivront vos traits</div>
+    <div class="paint-wrap">
+      <div class="paint-tools">
+        <button class="paint-tool-btn active" id="ptool-pen">✎ Crayon</button>
+        <button class="paint-tool-btn" id="ptool-eraser">◻ Gomme</button>
+        <button class="paint-tool-btn" id="ptool-clear">✕ Effacer tout</button>
+        <div class="paint-size-row">
+          <span>Épaisseur</span>
+          <input type="range" id="brush-size" min="2" max="30" value="8">
+          <span id="brush-size-val">8</span>
+        </div>
+      </div>
+      <canvas id="paint-canvas" width="500" height="350"></canvas>
+      <p class="paint-hint">Dessinez ci-dessus · Cliquez sur Générer pour remplir de mots</p>
+    </div>
   </div>
 
   <!-- CONTROLS -->
-  <div class="controls">
+  <div class="controls-bar">
     <button class="btn primary" id="btn-gen">✦ Générer</button>
-    <button class="btn" id="btn-color">Couleur : Mono</button>
-    <button class="btn" id="btn-export">Exporter SVG</button>
+    <button class="btn" id="btn-export">⬇ Exporter SVG</button>
+    <div class="color-selector">
+      <div class="color-chip active" data-palette="mono"     style="background:#2a2620" title="Mono"></div>
+      <div class="color-chip"        data-palette="gold"     style="background:#b33a18" title="Rouille"></div>
+      <div class="color-chip"        data-palette="spectrum" style="background:linear-gradient(135deg,#b33a18,#285a75)" title="Spectre"></div>
+      <div class="color-chip"        data-palette="neon"     style="background:linear-gradient(135deg,#00c8a0,#c800a0)" title="Néon"></div>
+      <div class="color-chip"        data-palette="pastel"   style="background:linear-gradient(135deg,#c06080,#6080c0)" title="Pastel"></div>
+    </div>
   </div>
 
-  <!-- STYLE BAR (après génération) -->
+  <!-- STYLE BAR -->
   <div class="style-bar" id="style-bar">
-    <button class="style-btn" id="sty-bold" title="Gras"><strong>G</strong></button>
+    <button class="style-btn" id="sty-bold"   title="Gras"><strong>G</strong></button>
     <button class="style-btn" id="sty-italic" title="Italique"><em>I</em></button>
-    <button class="style-btn" id="sty-under" title="Souligné"><u>S</u></button>
+    <button class="style-btn" id="sty-under"  title="Souligné"><u>S</u></button>
     <div class="style-sep"></div>
     <label class="style-color-wrap" title="Couleur du texte">
       <input type="color" id="sty-color" value="#2a2620">
       <span>Couleur</span>
     </label>
-    <button class="style-btn style-reset" id="sty-reset" title="Réinitialiser">↺</button>
+    <button class="style-btn" id="sty-reset" style="margin-left:auto;font-size:1rem;" title="Reset">↺</button>
   </div>
 
-  <!-- CANVAS -->
+  <!-- SVG OUTPUT -->
   <div class="canvas-wrap">
     <div class="shimmer" id="shimmer"></div>
     <svg id="svg-output" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-      <text x="250" y="260" text-anchor="middle" fill="#8a8278"
-        font-family="DM Mono,monospace" font-size="10" letter-spacing="0.25em">
+      <text x="250" y="260" text-anchor="middle" fill="#9a9590"
+        font-family="JetBrains Mono,monospace" font-size="9" letter-spacing="0.3em">
         CLIQUEZ SUR GÉNÉRER
       </text>
     </svg>
-    <div class="status">
+    <div class="status-bar">
       <span><span class="sdot" id="sdot"></span><span id="stext">Prêt</span></span>
       <span>Source : <a href="#" id="wiki-link" target="_blank">Wikipedia</a></span>
     </div>
@@ -95,23 +150,46 @@
 
 </main>
 
-<footer>Typographie Vivante — Données Wikipedia (CC BY-SA)</footer>
+<footer>DrawWord — Données Wikipedia (CC BY-SA) · Typographie vivante</footer>
 
 <script type="module">
-  import { SHAPES, generateRandom } from './shapes.js';
+  import { SHAPES, generateRandom }                        from './shapes.js';
   import { searchWiki, fetchWikiByTitle, fetchWikiRandom } from './wiki.js';
-  import { render, exportSVG, buildWordPaths, applyStyle } from './render.js';
+  import { render, renderPaint, exportSVG, buildWordPaths, applyStyle } from './render.js';
 
-  // ── STATE ──
-  let currentShape = 'bird';
-  let colorMode = 0;
-  const colorModes  = ['mono', 'gold', 'spectrum'];
-  const colorLabels = ['Mono', 'Or', 'Spectre'];
-  let selectedTitle = null;
-  let loading = false;
-  let textStyle = { bold: false, italic: false, underline: false, color: null };
+  // ── THÈME
+  const html = document.documentElement;
+  const saved = localStorage.getItem('dw-theme') || 'light';
+  html.setAttribute('data-theme', saved);
 
-  // ── SEARCH ──
+  document.getElementById('btn-theme').addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('dw-theme', next);
+    updatePaintCanvasBg();
+  });
+
+  // ── STATE
+  let currentShape   = 'bird';
+  let currentMode    = 'shape';
+  let currentPalette = 'mono';
+  let selectedTitle  = null;
+  let loading        = false;
+  let textStyle      = { bold: false, italic: false, underline: false, color: null };
+
+  // ── MODE TABS
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.mode-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      currentMode = tab.dataset.mode;
+      document.getElementById('content-' + currentMode).classList.add('active');
+      if (currentMode === 'paint') initPaintCanvas();
+    });
+  });
+
+  // ── SEARCH
   const wikiInput = document.getElementById('wiki-input');
   const suggBox   = document.getElementById('suggestions');
   const selLabel  = document.getElementById('sel-label');
@@ -122,9 +200,7 @@
     clearTimeout(searchTimer);
     const q = wikiInput.value.trim();
     if (q.length < 2) { suggBox.style.display = 'none'; return; }
-    searchTimer = setTimeout(async () => {
-      renderSugg(await searchWiki(q));
-    }, 320);
+    searchTimer = setTimeout(async () => renderSugg(await searchWiki(q)), 320);
   });
 
   document.getElementById('btn-search').addEventListener('click', async () => {
@@ -138,9 +214,9 @@
       suggBox.innerHTML = '<div class="sug-item muted">Aucun résultat</div>';
       suggBox.style.display = 'block'; return;
     }
-    suggBox.innerHTML = results
-      .map(r => `<div class="sug-item" data-t="${r.replace(/"/g,'&quot;')}">${r}</div>`)
-      .join('');
+    suggBox.innerHTML = results.map(r =>
+      `<div class="sug-item" data-t="${r.replace(/"/g,'&quot;')}">${r}</div>`
+    ).join('');
     suggBox.style.display = 'block';
     suggBox.querySelectorAll('.sug-item[data-t]').forEach(el =>
       el.addEventListener('click', () => selectWiki(el.dataset.t))
@@ -151,12 +227,11 @@
     selectedTitle = title;
     selLabel.textContent = title;
     btnClear.style.display = 'inline-block';
-    suggBox.style.display = 'none';
+    suggBox.style.display  = 'none';
     wikiInput.value = '';
-    // Auto-remplir le champ mot si word mode actif et champ vide
     const wi = document.getElementById('word-input');
-    if (document.getElementById('chk-word').checked && !wi.value.trim())
-      wi.value = title.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 10);
+    if (currentMode === 'word' && !wi.value.trim())
+      wi.value = title.toUpperCase().replace(/[^A-Z]/g,'').slice(0,11);
   }
 
   btnClear.addEventListener('click', () => {
@@ -166,23 +241,10 @@
   });
 
   document.addEventListener('click', e => {
-    if (!e.target.closest('.search-wrap')) suggBox.style.display = 'none';
+    if (!e.target.closest('.search-panel')) suggBox.style.display = 'none';
   });
 
-  // ── WORD MODE ──
-  const chkWord   = document.getElementById('chk-word');
-  const wordInput = document.getElementById('word-input');
-  const shapeRow  = document.getElementById('shape-row');
-
-  chkWord.addEventListener('change', () => {
-    const on = chkWord.checked;
-    wordInput.style.display = on ? 'block' : 'none';
-    // Griser les formes (elles sont ignorées en mode mot)
-    shapeRow.style.opacity = on ? '0.35' : '1';
-    shapeRow.style.pointerEvents = on ? 'none' : '';
-  });
-
-  // ── SHAPES ──
+  // ── SHAPES
   document.querySelectorAll('.shape-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
@@ -191,11 +253,119 @@
     });
   });
 
-  // ── GENERATE ──
+  // ── PALETTE
+  document.querySelectorAll('.color-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentPalette = chip.dataset.palette;
+    });
+  });
+
+  // ── PAINT CANVAS
+  let paintCanvas, paintCtx;
+  let painting = false;
+  let paintTool = 'pen';
+  let brushSize = 8;
+  let strokes = [];
+  let currentStroke = null;
+  let paintReady = false;
+
+  function initPaintCanvas() {
+    if (paintReady) return;
+    paintReady = true;
+    paintCanvas = document.getElementById('paint-canvas');
+    paintCtx    = paintCanvas.getContext('2d');
+    updatePaintCanvasBg();
+    paintCtx.lineCap  = 'round';
+    paintCtx.lineJoin = 'round';
+    paintCanvas.addEventListener('pointerdown', onPaintStart);
+    paintCanvas.addEventListener('pointermove',  onPaintMove);
+    paintCanvas.addEventListener('pointerup',    onPaintEnd);
+    paintCanvas.addEventListener('pointerleave', onPaintEnd);
+  }
+
+  function updatePaintCanvasBg() {
+    if (!paintCanvas) return;
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--svg-bg').trim();
+    paintCanvas.style.background = bg || '#ede8de';
+  }
+
+  function getPaintPos(e) {
+    const rect   = paintCanvas.getBoundingClientRect();
+    const scaleX = paintCanvas.width  / rect.width;
+    const scaleY = paintCanvas.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  }
+
+  function onPaintStart(e) {
+    painting = true;
+    paintCanvas.setPointerCapture(e.pointerId);
+    const pos = getPaintPos(e);
+    currentStroke = { points: [pos] };
+    paintCtx.beginPath();
+    paintCtx.moveTo(pos.x, pos.y);
+  }
+
+  function onPaintMove(e) {
+    if (!painting) return;
+    const pos = getPaintPos(e);
+    currentStroke.points.push(pos);
+    paintCtx.lineWidth = brushSize;
+    if (paintTool === 'eraser') {
+      paintCtx.globalCompositeOperation = 'destination-out';
+      paintCtx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      paintCtx.globalCompositeOperation = 'source-over';
+      const ink = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim();
+      paintCtx.strokeStyle = ink || '#18160f';
+    }
+    paintCtx.lineTo(pos.x, pos.y);
+    paintCtx.stroke();
+    paintCtx.beginPath();
+    paintCtx.moveTo(pos.x, pos.y);
+  }
+
+  function onPaintEnd() {
+    if (!painting) return;
+    painting = false;
+    paintCtx.globalCompositeOperation = 'source-over';
+    if (currentStroke && currentStroke.points.length > 1) strokes.push(currentStroke);
+    currentStroke = null;
+  }
+
+  document.getElementById('ptool-pen').addEventListener('click', () => {
+    paintTool = 'pen';
+    document.getElementById('ptool-pen').classList.add('active');
+    document.getElementById('ptool-eraser').classList.remove('active');
+  });
+
+  document.getElementById('ptool-eraser').addEventListener('click', () => {
+    paintTool = 'eraser';
+    document.getElementById('ptool-eraser').classList.add('active');
+    document.getElementById('ptool-pen').classList.remove('active');
+  });
+
+  document.getElementById('ptool-clear').addEventListener('click', () => {
+    if (!paintCtx) return;
+    paintCtx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+    strokes = [];
+  });
+
+  document.getElementById('brush-size').addEventListener('input', e => {
+    brushSize = +e.target.value;
+    document.getElementById('brush-size-val').textContent = brushSize;
+  });
+
+  // ── GENERATE
   document.getElementById('btn-gen').addEventListener('click', async () => {
     if (loading) return;
-    loading = true;
+    if (currentMode === 'paint' && !strokes.length) {
+      document.getElementById('stext').textContent = 'Dessinez d\'abord quelque chose !';
+      return;
+    }
 
+    loading = true;
     const shimmer = document.getElementById('shimmer');
     const sdot    = document.getElementById('sdot');
     const stext   = document.getElementById('stext');
@@ -213,41 +383,40 @@
 
       stext.textContent = 'Composition…';
 
-      // Choix des paths : mot ou forme
-      const wordMode = chkWord.checked;
-      const wordText = wordInput.value.trim().toUpperCase().replace(/[^A-Z ]/g, '') || wikiData.title.toUpperCase().replace(/[^A-Z ]/g, '').slice(0, 10);
+      if (currentMode === 'paint') {
+        const scaleY = 500 / 350;
+        const scaledStrokes = strokes.map(s => ({
+          points: s.points.map(p => ({ x: p.x, y: p.y * scaleY }))
+        }));
+        renderPaint(scaledStrokes, wikiData, currentPalette, textStyle);
 
-      let paths;
-      if (wordMode) {
-        paths = buildWordPaths(wordText);
+      } else if (currentMode === 'word') {
+        const raw = document.getElementById('word-input').value.trim().toUpperCase().replace(/[^A-Z ]/g,'')
+          || wikiData.title.toUpperCase().replace(/[^A-Z]/g,'').slice(0,11);
+        const paths = buildWordPaths(raw);
         if (!paths.length) {
-          stext.textContent = 'Mot invalide — utilisez des lettres A-Z';
-          shimmer.classList.remove('on');
-          sdot.classList.remove('on');
-          btnGen.disabled = false;
-          loading = false;
-          return;
+          stext.textContent = 'Mot invalide — lettres A–Z seulement';
+          shimmer.classList.remove('on'); sdot.classList.remove('on');
+          btnGen.disabled = false; loading = false; return;
         }
-      } else if (currentShape === 'random') {
-        paths = generateRandom();
+        render(paths, wikiData, currentPalette, textStyle);
+
       } else {
-        paths = SHAPES[currentShape];
+        const paths = currentShape === 'random' ? generateRandom() : SHAPES[currentShape];
+        render(paths, wikiData, currentPalette, textStyle);
       }
 
-      render(paths, wikiData, colorModes[colorMode], textStyle);
-
       document.getElementById('style-bar').classList.add('visible');
-
       document.getElementById('wiki-panel-title').textContent = wikiData.title;
-      document.getElementById('wiki-excerpt').textContent = wikiData.text.slice(0, 300) + '…';
-      document.getElementById('wiki-link').href = `https://fr.wikipedia.org/?curid=${wikiData.pageId}`;
-      document.getElementById('wiki-link').textContent = wikiData.title;
+      document.getElementById('wiki-excerpt').textContent     = wikiData.text.slice(0, 320) + '…';
+      document.getElementById('wiki-link').href               = `https://fr.wikipedia.org/?curid=${wikiData.pageId}`;
+      document.getElementById('wiki-link').textContent        = wikiData.title;
       document.getElementById('wiki-panel').classList.add('open');
       stext.textContent = `"${wikiData.title}" · ${wikiData.text.split(' ').length} mots`;
 
-    } catch (e) {
+    } catch (err) {
       stext.textContent = 'Erreur — réessayez';
-      console.error(e);
+      console.error(err);
     }
 
     shimmer.classList.remove('on');
@@ -256,24 +425,17 @@
     loading = false;
   });
 
-  // ── COLOR ──
-  document.getElementById('btn-color').addEventListener('click', () => {
-    colorMode = (colorMode + 1) % colorModes.length;
-    document.getElementById('btn-color').textContent = `Couleur : ${colorLabels[colorMode]}`;
-  });
-
-  // ── STYLE BAR ──
-  function toggleStyleBtn(id, key) {
-    const btn = document.getElementById(id);
-    btn.addEventListener('click', () => {
+  // ── STYLE BAR
+  function toggleStyle(id, key) {
+    document.getElementById(id).addEventListener('click', () => {
       textStyle[key] = !textStyle[key];
-      btn.classList.toggle('active', textStyle[key]);
+      document.getElementById(id).classList.toggle('active', textStyle[key]);
       applyStyle(textStyle);
     });
   }
-  toggleStyleBtn('sty-bold',   'bold');
-  toggleStyleBtn('sty-italic', 'italic');
-  toggleStyleBtn('sty-under',  'underline');
+  toggleStyle('sty-bold',   'bold');
+  toggleStyle('sty-italic', 'italic');
+  toggleStyle('sty-under',  'underline');
 
   document.getElementById('sty-color').addEventListener('input', e => {
     textStyle.color = e.target.value;
@@ -282,14 +444,14 @@
 
   document.getElementById('sty-reset').addEventListener('click', () => {
     textStyle = { bold: false, italic: false, underline: false, color: null };
-    document.getElementById('sty-bold').classList.remove('active');
-    document.getElementById('sty-italic').classList.remove('active');
-    document.getElementById('sty-under').classList.remove('active');
+    ['sty-bold','sty-italic','sty-under'].forEach(id =>
+      document.getElementById(id).classList.remove('active')
+    );
     document.getElementById('sty-color').value = '#2a2620';
     applyStyle(textStyle);
   });
 
-  // ── EXPORT ──
+  // ── EXPORT
   document.getElementById('btn-export').addEventListener('click', () => exportSVG());
 </script>
 </body>
